@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>big
+    <script>
         // Custom color themes for Tailwind CSS
         tailwind.config = {
             darkMode: 'class',
@@ -42,7 +42,7 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .app-header { @apply bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700; }
+        /* Removed .app-header rule */
         .card { @apply bg-white dark:bg-gray-800 transition-colors duration-300; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07); }
         .stage-tab.active { @apply border-theme-primary text-gray-900 dark:text-white; }
         details[open] > summary { background-color: var(--color-accent); @apply dark:bg-gray-700/50; }
@@ -87,12 +87,18 @@
         .sortable-item {
             @apply p-2 border dark:border-gray-700 rounded-md cursor-grab bg-white dark:bg-gray-800;
         }
+        /* Add transition for smooth shadow effect */
+        header {
+            transition: box-shadow 0.3s ease-in-out;
+        }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+<!-- Modified body tag: Changed dark:bg-gray-900 to dark:bg-gray-800 -->
+<body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 transition-colors duration-300">
 
     <!-- Header -->
-    <header class="app-header shadow-sm sticky top-0 z-40">
+     <!-- Removed border and shadow classes, added id="appHeader" -->
+     <header id="appHeader" class="bg-white dark:bg-gray-800 sticky top-0 z-40">
         <div class="container mx-auto p-2 grid grid-cols-5 items-center">
             <!-- Left: Logo -->
             <div class="flex items-center col-span-1">
@@ -101,7 +107,7 @@
 
             <!-- Center: Title & Workflow -->
             <div class="flex flex-col items-center justify-center text-center col-span-3">
-                <div class="flex items-start justify-center space-x-1 sm:space-x-5">
+                <div class="flex items-start justify-center space-x-2 sm:space-x-4">
                     <!-- Stage 1: CIRA -->
                     <div class="flex flex-col items-center w-16 text-center text-sky-400">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="12" cy="14" r="2"></circle><path d="M12 16c-1.5 0-3 .5-3 2v1h6v-1c0-1.5-1.5-2-3-2z"></path></svg>
@@ -115,7 +121,7 @@
                     </div>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-gray-400 mt-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     <!-- Stage 3: DESIGN -->
-                    <div class="flex flex-col items-center w-16.1 text-center text-blue-500">
+                    <div class="flex flex-col items-center w-20 text-center text-blue-500">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M20 18V6" /><path d="M18 6h-2" /><path d="M18 12h-2" /><path d="M18 18h-2" /><path d="M12.13 18.87a5.1 5.1 0 0 1-3.6-1.53l-1.3-1.3a5.1 5.1 0 0 1-1.53-3.6V12" /><path d="M4 12V8a5.1 5.1 0 0 1 1.53-3.6l1.3-1.3a5.1 5.1 0 0 1 3.6-1.53H12" /></svg>
                         <p class="text-xs mt-1 font-medium leading-tight">Product & Process Design</p>
                     </div>
@@ -144,9 +150,9 @@
                         <p class="text-xs mt-1 font-medium">Production run</p>
                     </div>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">
+                 <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">
                     New Product Development <br>
-                    <span class="text-3xl italic font-extrabold" style="color: #B8212F;">Obeya</span>
+                    <span class="text-3xl italic font-extrabold" style="color: #8B0000;">Obeya</span>
                 </h1>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Big Room</p>
             </div>
@@ -336,8 +342,7 @@
                   </div>
                   <div>
                       <p class="text-sm font-semibold text-right">Revision History</p>
-                      <p class="text-xs">Version A1.01</p>
-                      </div>
+                      <p class="text-xs text-gray-700 dark:text-gray-300">Version A1.01</p>
                   </div>
             </div>
         </footer>
@@ -388,6 +393,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
         // --- DOM Elements & State ---
+        const appHeader = document.getElementById('appHeader'); // Added header reference
         const csvFileInput = document.getElementById('csvFileInput');
         const exportCsvButton = document.getElementById('exportCsvButton');
         const step2 = document.getElementById('step-2');
@@ -532,6 +538,12 @@
              document.documentElement.classList.add(theme);
              localStorage.setItem('colorTheme', theme);
         };
+        
+        applyColorTheme(localStorage.getItem('colorTheme') || 'theme-blue'); // Apply theme early
+        themeSelector.value = localStorage.getItem('colorTheme') || 'theme-blue';
+        // applyDarkMode(); Moved inside DOMContentLoaded
+        loadSettings();
+
         settingsButton.addEventListener('click', (e) => { e.stopPropagation(); settingsModal.classList.toggle('hidden'); populateSettingsModal(); });
         document.addEventListener('click', (e) => { if (!settingsModal.contains(e.target) && !settingsButton.contains(e.target)) { settingsModal.classList.add('hidden'); } });
         darkModeSwitch.addEventListener('change', () => { localStorage.theme = darkModeSwitch.checked ? 'dark' : 'light'; applyDarkMode(); updateDashboardView(); });
@@ -540,10 +552,6 @@
         document.getElementById('saveSettings')?.addEventListener('click', saveSettings);
         document.getElementById('resetSettings')?.addEventListener('click', resetSettings);
         
-        applyColorTheme(localStorage.getItem('colorTheme') || 'theme-blue');
-        themeSelector.value = localStorage.getItem('colorTheme') || 'theme-blue';
-        applyDarkMode();
-        loadSettings();
         
         // --- Modal Logic ---
         closeModal.addEventListener('click', () => detailModal.classList.add('hidden'));
@@ -1756,16 +1764,17 @@
                 }
             });
         });
-        
+
         // --- Header Scroll Effect ---
-        const header = document.querySelector('.app-header');
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 10) { // When scrolled more than 10 pixels
-                header.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm', 'border-b', 'border-gray-200', 'dark:border-gray-700');
-            } else { // When at the very top
-                header.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm', 'border-b', 'border-gray-200', 'dark:border-gray-700');
+            if (window.scrollY > 0) {
+                appHeader.classList.add('shadow-md'); // Add shadow when scrolled
+            } else {
+                appHeader.classList.remove('shadow-md'); // Remove shadow when at the top
             }
         });
+
+        applyDarkMode(); // Apply dark mode settings on initial load
     });
     </script>
 </body>
