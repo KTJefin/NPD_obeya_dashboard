@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-blue">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Product Development - Obeya</title>
+    <!-- Papa Parse CSV Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Chart.js for Dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SortableJS for Drag-and-Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>big
+        // Custom color themes for Tailwind CSS
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'theme-primary': 'var(--color-primary)',
+                        'theme-secondary': 'var(--color-secondary)',
+                        'theme-accent': 'var(--color-accent)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root.theme-blue { --color-primary: #3B82F6; --color-secondary: #60A5FA; --color-accent: #EFF6FF; }
+        :root.theme-red { --color-primary: #DC2626; --color-secondary: #F87171; --color-accent: #FEF2F2; }
+        :root.theme-indigo { --color-primary: #6366F1; --color-secondary: #818CF8; --color-accent: #EEF2FF; }
+        :root.theme-purple { --color-primary: #8B5CF6; --color-secondary: #A78BFA; --color-accent: #F5F3FF; }
+        :root.theme-black { --color-primary: #1F2937; --color-secondary: #4B5563; --color-accent: #F3F4F6; }
+        :root.theme-pink { --color-primary: #EC4899; --color-secondary: #F472B6; --color-accent: #FDF2F8; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .app-header { @apply bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700; }
+        .card { @apply bg-white dark:bg-gray-800 transition-colors duration-300; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07); }
+        .stage-tab.active { @apply border-theme-primary text-gray-900 dark:text-white; }
+        details[open] > summary { background-color: var(--color-accent); @apply dark:bg-gray-700/50; }
+        .dark-mode-toggle-icon { @apply h-6 w-6 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white; }
+        .stage-tab { cursor: pointer; transition: all 0.2s ease-in-out; border-bottom: 3px solid transparent; }
+        .stage-tab:not(.active) { @apply text-gray-500 dark:text-gray-400; }
+        .stage-tab:not(.active):hover { @apply border-gray-300 dark:border-gray-600; }
+        details > summary { list-style: none; cursor: pointer; @apply p-4 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary:hover { @apply bg-gray-50 dark:bg-gray-700/50; }
+        .summary-arrow { transition: transform 0.2s; }
+        details[open] .summary-arrow { transform: rotate(90deg); }
+        /* Toggle Switch for Dark Mode */
+        .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--color-primary); }
+        input:checked + .slider:before { transform: translateX(16px); }
+        /* Pivot table styles */
+        #pivotTableContainer th { @apply sticky top-0 z-10; }
+        /* Modal Styles */
+        .modal-overlay {
+            @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+        }
+        .modal-content {
+            @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col;
+        }
+        .tooltip-container .tooltip-text {
+            visibility: hidden;
+            @apply w-48 bg-gray-600 text-white text-center text-xs rounded-lg py-1 px-2 absolute z-10 bottom-full left-1/2 -ml-24;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .sortable-ghost {
+            @apply bg-theme-accent opacity-50;
+        }
+        .sortable-item {
+            @apply p-2 border dark:border-gray-700 rounded-md cursor-grab bg-white dark:bg-gray-800;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <!-- Header -->
+    <header class="app-header shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto p-2 grid grid-cols-5 items-center">
+            <!-- Left: Logo -->
+            <div class="flex items-center col-span-1">
+                <img src="kaynes_logo.PNG" alt="Kaynes Technology Logo" class="h-16">
+            </div>
+
+            <!-- Center: Title & Workflow -->
+            <div class="flex flex-col items-center justify-center text-center col-span-3">
+                <div class="flex items-start justify-center space-x-1 sm:space-x-5">
+                    <!-- Stage 1: CIRA -->
+                    <div class="flex flex-col items-center w-16 text-center text-sky-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="12" cy="14" r="2"></circle><path d="M12 16c-1.5 0-3 .5-3 2v1h6v-1c0-1.5-1.5-2-3-2z"></path></svg>
+                        <p class="text-xs mt-1 font-medium">CIRA</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-gray-400 mt-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <!-- Stage 2: APAP -->
+                    <div class="flex flex-col items-center w-16 text-center text-sky-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="m9 14 2 2 4-4"></path></svg>
+                        <p class="text-xs mt-1 font-medium">APAP</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-gray-400 mt-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <!-- Stage 3: DESIGN -->
+                    <div class="flex flex-col items-center w-16.1 text-center text-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M20 18V6" /><path d="M18 6h-2" /><path d="M18 12h-2" /><path d="M18 18h-2" /><path d="M12.13 18.87a5.1 5.1 0 0 1-3.6-1.53l-1.3-1.3a5.1 5.1 0 0 1-1.53-3.6V12" /><path d="M4 12V8a5.1 5.1 0 0 1 1.53-3.6l1.3-1.3a5.1 5.1 0 0 1 3.6-1.53H12" /></svg>
+                        <p class="text-xs mt-1 font-medium leading-tight">Product & Process Design</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-gray-400 mt-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <!-- Stage 4: Proto-->
+                    <div class="flex flex-col items-center w-16 text-center text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        <p class="text-xs mt-1 font-medium">Proto</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-gray-400 mt-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <!-- Stage 5: FAI/PPAP -->
+                    <div class="flex flex-col items-center w-16 text-center text-indigo-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="14.5" cy="14.5" r="2.5"></circle><line x1="16" y1="16" x2="18" y2="18"></line></svg>
+                        <p class="text-xs mt-1 font-medium">FAI / PPAP</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-gray-400 mt-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <!-- Stage 6: QP Sign off -->
+                    <div class="flex flex-col items-center w-16 text-center text-green-500">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m9 15 2 2 4-4"></path></svg>
+                        <p class="text-xs mt-1 font-medium leading-tight">QP Sign off</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-gray-400 mt-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <!-- Stage 7: Production run -->
+                    <div class="flex flex-col items-center w-16 text-center text-orange-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M16 18h2"></path><path d="M12 18h2"></path><path d="M8 18h2"></path></svg>
+                        <p class="text-xs mt-1 font-medium">Production run</p>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-2">
+                    New Product Development <br>
+                    <span class="text-3xl italic font-extrabold" style="color: #B8212F;">Obeya</span>
+                </h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Big Room</p>
+            </div>
+
+
+            <!-- Right: Settings -->
+            <div class="flex items-center space-x-4 justify-self-end col-span-1">
+                <div class="relative">
+                    <button id="settingsButton" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                        <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    </button>
+                    <!-- Settings Modal -->
+                    <div id="settingsModal" class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700 p-4 hidden z-20">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Color Theme</label>
+                                <select id="themeSelector" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary">
+                                    <option value="theme-blue">Blue</option>
+                                    <option value="theme-red">Red</option>
+                                    <option value="theme-indigo">Indigo</option>
+                                    <option value="theme-purple">Purple</option>
+                                    <option value="theme-black">Black</option>
+                                    <option value="theme-pink">Pink</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="darkModeSwitch" class="text-sm font-medium text-gray-700 dark:text-gray-300">Dark Mode</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="darkModeSwitch">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <h4 class="text-md font-semibold mb-2 text-gray-800 dark:text-gray-200">Product Review</h4>
+                                <button id="openColumnOrderModalBtn" class="w-full text-sm font-medium p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">Customize Pivot Order</button>
+                            </div>
+
+                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <h4 class="text-md font-semibold mb-2 text-gray-800 dark:text-gray-200">Performance Scoring</h4>
+                                
+                                <div class="space-y-2">
+                                    <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400">Workload Score Weights</h5>
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <label for="weight-proto-i">Proto I</label><input type="number" step="0.1" id="weight-proto-i" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="weight-proto-ii">Proto II</label><input type="number" step="0.1" id="weight-proto-ii" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="weight-proto-iii">Proto III</label><input type="number" step="0.1" id="weight-proto-iii" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="weight-lvpt">LVPT</label><input type="number" step="0.1" id="weight-lvpt" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="weight-hvpt">HVPT</label><input type="number" step="0.1" id="weight-hvpt" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2 mt-4">
+                                    <h5 class="text-sm font-medium text-gray-600 dark:text-gray-400">RAG Thresholds (Upper Bound %)</h5>
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <label for="rag-low" class="text-green-500">Low (up to)</label><input type="number" step="0.1" id="rag-low" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="rag-stretching" class="text-yellow-500">Stretching (up to)</label><input type="number" step="0.1" id="rag-stretching" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="rag-optimum" class="text-blue-500">Optimum (up to)</label><input type="number" step="0.1" id="rag-optimum" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="rag-high" style="color: #f87171;">High (up to)</label><input type="number" step="0.1" id="rag-high" class="w-full p-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-4">
+                                    <button id="saveSettings" class="w-full bg-theme-primary text-white text-sm font-bold py-2 px-4 rounded hover:bg-theme-secondary transition-colors">Save</button>
+                                    <button id="resetSettings" class="w-full bg-gray-200 dark:bg-gray-600 text-sm font-bold py-2 px-4 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl flex-grow">
+        <main class="space-y-8">
+            <div id="step-1" class="card p-6 rounded-xl">
+                 <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 bg-theme-primary text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">1</div>
+                    <h2 class="ml-4 text-2xl font-semibold">Upload & Export Data</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                    <div>
+                        <label for="csvFileInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Tracker CSV File</label>
+                        <div class="flex items-center">
+                            <input type="file" id="csvFileInput" accept=".csv" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-200 dark:file:bg-gray-700 file:text-theme-primary dark:file:text-theme-secondary hover:file:bg-blue-100 dark:hover:file:bg-gray-600 cursor-pointer"/>
+                        </div>
+                    </div>
+                     <div>
+                        <button id="exportCsvButton" class="hidden w-full md:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-colors duration-200 flex items-center justify-center">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Export Updated CSV
+                        </button>
+                    </div>
+                </div>
+                <div id="progress-container" class="hidden w-full bg-gray-200 rounded-full h-4 mt-4 dark:bg-gray-700">
+                    <div id="progress-bar" class="bg-theme-primary h-4 rounded-full text-xs font-medium text-blue-100 text-center p-0.5 leading-none" style="width: 0%">0%</div>
+                </div>
+            </div>
+
+            <div id="step-2" class="card p-6 rounded-xl hidden">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 bg-theme-primary text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">2</div>
+                    <h2 class="ml-4 text-2xl font-semibold">Select Filters and Review</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <label for="typeSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Type</label>
+                        <select id="typeSelect" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-theme-primary focus:border-theme-primary">
+                            <option value="all">-- All Types --</option>
+                            <option value="auto">Auto</option>
+                            <option value="non-auto">Non-Auto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="sbuSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select SBU</label>
+                        <select id="sbuSelect" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"></select>
+                    </div>
+                    <div>
+                        <label for="engineerSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select NPI Engineer (Ranked)</label>
+                        <select id="engineerSelect" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"></select>
+                    </div>
+                    <div class="md:col-span-1">
+                        <div id="errorSummary" class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg h-full flex items-center justify-center"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage-navigation" class="card p-2 rounded-xl hidden">
+                <div class="flex flex-wrap space-x-4 border-b border-gray-200 dark:border-gray-700">
+                    <div id="tab-stage1" class="stage-tab active font-semibold text-lg py-3 px-4 flex items-center relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-red-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Validate
+                        <span id="error-badge" class="absolute top-1 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                    </div>
+                    <div id="tab-stage2" class="stage-tab font-semibold text-lg py-3 px-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Product Status
+                    </div>
+                    <div id="tab-stage3" class="stage-tab font-semibold text-lg py-3 px-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        Performance
+                    </div>
+                    <div id="tab-stage4" class="stage-tab font-semibold text-lg py-3 px-4 flex items-center">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Product Review
+                    </div>
+                </div>
+                
+                <div id="stage-1-content" class="p-4"><div id="errorAccordionContainer" class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"></div></div>
+                <div id="stage-2-content" class="p-6 hidden"></div>
+                <div id="stage-3-content" class="p-6 hidden"></div>
+                <div id="stage-4-content" class="p-6 hidden">
+                    <div class="flex items-center justify-end mb-4 gap-4">
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 mr-3">Pivot by:</span>
+                            <span class="mr-2 text-sm">Status</span>
+                            <label class="switch">
+                                <input type="checkbox" id="pivotToggleSwitch">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="ml-2 text-sm">Build Level</span>
+                        </div>
+                    </div>
+                    <div id="stage4Filters" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"></div>
+                    <div id="pivotTableContainer" class="overflow-auto max-h-[70vh] border border-gray-200 dark:border-gray-700 rounded-lg"></div>
+                </div>
+            </div>
+             <div id="notification" class="fixed bottom-5 right-5 p-4 rounded-lg text-white shadow-lg max-w-sm hidden transition-transform duration-300 translate-y-20">
+                <p id="notificationMessage"></p>
+            </div>
+        </main>
+        
+        <footer class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-4 text-gray-600 dark:text-gray-400">
+             <div class="flex justify-between items-end">
+                 <div>
+                     <p class="text-sm font-semibold">Powered by: Kaynes Quality management system - NPM </p>
+                     <p class="text-xs">Developed by: Jefin Stephen</p>
+                  </div>
+                  <div>
+                      <p class="text-sm font-semibold text-right">Revision History</p>
+                      <p class="text-xs">Version A1.01</p>
+                      </div>
+                  </div>
+            </div>
+        </footer>
+
+        <!-- Detail Modal -->
+        <div id="detailModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                    <h2 id="modalTitle" class="text-lg font-semibold">Project Details</h2>
+                    <button id="closeModal" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="modalBody" class="p-4 overflow-auto"></div>
+            </div>
+        </div>
+
+        <!-- Column Order Modal -->
+        <div id="columnOrderModal" class="modal-overlay hidden">
+            <div class="modal-content max-w-3xl">
+                <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                    <h2 class="text-lg font-semibold">Customize Pivot Table Column Order</h2>
+                    <button id="closeColumnOrderModal" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="p-6 overflow-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold mb-2">Build Level Order</h3>
+                        <p class="text-xs text-gray-500 mb-2">Drag and drop to reorder the columns.</p>
+                        <div id="buildLevelSortable" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold mb-2">Status Order</h3>
+                        <p class="text-xs text-gray-500 mb-2">Drag and drop to reorder the columns.</p>
+                        <div id="statusSortable" class="space-y-2"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end p-4 border-t dark:border-gray-700 space-x-2">
+                    <button id="resetColumnOrder" class="bg-gray-200 dark:bg-gray-600 text-sm font-bold py-2 px-4 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">Reset to Default</button>
+                    <button id="saveColumnOrder" class="bg-theme-primary text-white text-sm font-bold py-2 px-4 rounded hover:bg-theme-secondary transition-colors">Save Order</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements & State ---
+        const csvFileInput = document.getElementById('csvFileInput');
+        const exportCsvButton = document.getElementById('exportCsvButton');
+        const step2 = document.getElementById('step-2');
+        const typeSelect = document.getElementById('typeSelect');
+        const engineerSelect = document.getElementById('engineerSelect');
+        const sbuSelect = document.getElementById('sbuSelect');
+        const errorSummary = document.getElementById('errorSummary');
+        const errorAccordionContainer = document.getElementById('errorAccordionContainer');
+        const stage2Content = document.getElementById('stage-2-content');
+        const stage3Content = document.getElementById('stage-3-content');
+        const stage4Content = document.getElementById('stage-4-content');
+        const stageNavigation = document.getElementById('stage-navigation');
+        const stageTabs = { stage1: document.getElementById('tab-stage1'), stage2: document.getElementById('tab-stage2'), stage3: document.getElementById('tab-stage3'), stage4: document.getElementById('tab-stage4') };
+        const stageContents = { stage1: document.getElementById('stage-1-content'), stage2: document.getElementById('stage-2-content'), stage3: document.getElementById('stage-3-content'), stage4: document.getElementById('stage-4-content') };
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const settingsButton = document.getElementById('settingsButton');
+        const settingsModal = document.getElementById('settingsModal');
+        const darkModeSwitch = document.getElementById('darkModeSwitch');
+        const themeSelector = document.getElementById('themeSelector');
+        const detailModal = document.getElementById('detailModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const closeModal = document.getElementById('closeModal');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        
+        // Column Order Modal Elements
+        const columnOrderModal = document.getElementById('columnOrderModal');
+        const closeColumnOrderModal = document.getElementById('closeColumnOrderModal');
+        const saveColumnOrder = document.getElementById('saveColumnOrder');
+        const resetColumnOrder = document.getElementById('resetColumnOrder');
+        const buildLevelSortable = document.getElementById('buildLevelSortable');
+        const statusSortable = document.getElementById('statusSortable');
+        const openColumnOrderModalBtn = document.getElementById('openColumnOrderModalBtn');
+
+
+        let fullDataset = [];
+        let originalHeaders = [];
+        let rankedEngineers = [];
+        let activeCharts = {};
+        
+        // --- Column Name Constants ---
+        const PENDING_REASON_COL = 'STATUS PENDING DUE TO (CUS/KEM/CRM/NPD/SCM/PM/WHM/PRM/FG/HOLD)';
+        const JOB_COL = 'Product PAT/JOB';
+        const PROMISED_DATE_COL = 'Customer required/CRP Promised Date';
+        const RELEASED_DATE_COL = 'CRP Released date';
+        const FG_PART_NO_COL = 'FG Part number';
+        const REVISED_DATE_COL = 'Revised promised date';
+        const SL_NO_COL = 'Sl No';
+        const DESCRIPTION_COL = 'Description';
+        const SO_COL = 'SO';
+        const SBU_COL = 'SBU';
+        const BUYER_COL = 'Buyer';
+        const SO_CRP_DATE_COL = 'SO/CRP Date';
+        const BOM_APPROVED_DATE_COL = 'BOM Approved Date';
+        const BUILD_LEVEL_COL = 'Build Level';
+        const PM_COL = 'Project Manager';
+        const NPI_ENG_COL = 'NPI Engineer';
+        const PRODUCT_FILE_DATE_COL = 'Product File actual released date';
+        const YIELD_COL = 'Yield';
+        const QTY_COL = 'Qty';
+        const PER_UNIT_VALUE_COL = 'Per Unit Value';
+        const CUSTOMER_COL = 'Customer';
+        const NPM_ACTION_COL = 'NPM action plan and reivew status';
+        
+        const REQUIRED_COLUMNS = [ SL_NO_COL, CUSTOMER_COL, FG_PART_NO_COL, PM_COL, NPI_ENG_COL, RELEASED_DATE_COL, 'Phase', JOB_COL, PROMISED_DATE_COL, PENDING_REASON_COL, YIELD_COL, 'DFM Origin', 'DFM Status', REVISED_DATE_COL, SO_COL, SBU_COL, BUYER_COL, SO_CRP_DATE_COL, BOM_APPROVED_DATE_COL, BUILD_LEVEL_COL, PRODUCT_FILE_DATE_COL, QTY_COL, PER_UNIT_VALUE_COL, NPM_ACTION_COL ];
+
+        // --- Settings Management ---
+        let settings = {};
+
+        const defaultSettings = {
+            weights: {
+                'Proto I': 5,
+                'Proto II': 2,
+                'Proto III': 1.5,
+                'LVPT': 1.0,
+                'HVPT': 0.5,
+            },
+            ragThresholds: {
+                low: 20,
+                stretching: 45,
+                optimum: 70,
+                high: 79,
+            }
+        };
+
+        const loadSettings = () => {
+            const savedSettings = localStorage.getItem('npiTrackerSettings');
+            settings = savedSettings ? JSON.parse(savedSettings) : JSON.parse(JSON.stringify(defaultSettings));
+            populateSettingsModal();
+        };
+
+        const populateSettingsModal = () => {
+            document.getElementById('weight-proto-i').value = settings.weights['Proto I'];
+            document.getElementById('weight-proto-ii').value = settings.weights['Proto II'];
+            document.getElementById('weight-proto-iii').value = settings.weights['Proto III'];
+            document.getElementById('weight-lvpt').value = settings.weights['LVPT'];
+            document.getElementById('weight-hvpt').value = settings.weights['HVPT'];
+
+            document.getElementById('rag-low').value = settings.ragThresholds.low;
+            document.getElementById('rag-stretching').value = settings.ragThresholds.stretching;
+            document.getElementById('rag-optimum').value = settings.ragThresholds.optimum;
+            document.getElementById('rag-high').value = settings.ragThresholds.high;
+        };
+
+        const saveSettings = () => {
+            settings.weights['Proto I'] = parseFloat(document.getElementById('weight-proto-i').value);
+            settings.weights['Proto II'] = parseFloat(document.getElementById('weight-proto-ii').value);
+            settings.weights['Proto III'] = parseFloat(document.getElementById('weight-proto-iii').value);
+            settings.weights['LVPT'] = parseFloat(document.getElementById('weight-lvpt').value);
+            settings.weights['HVPT'] = parseFloat(document.getElementById('weight-hvpt').value);
+
+            settings.ragThresholds.low = parseFloat(document.getElementById('rag-low').value);
+            settings.ragThresholds.stretching = parseFloat(document.getElementById('rag-stretching').value);
+            settings.ragThresholds.optimum = parseFloat(document.getElementById('rag-optimum').value);
+            settings.ragThresholds.high = parseFloat(document.getElementById('rag-high').value);
+
+            localStorage.setItem('npiTrackerSettings', JSON.stringify(settings));
+            showNotification('Settings saved!', false);
+            settingsModal.classList.add('hidden');
+            updateDashboardView();
+        };
+        
+        const resetSettings = () => {
+            settings = JSON.parse(JSON.stringify(defaultSettings));
+            localStorage.removeItem('npiTrackerSettings');
+            populateSettingsModal();
+            showNotification('Settings reset to default.', false);
+            settingsModal.classList.add('hidden');
+            updateDashboardView();
+        };
+
+        // --- Theming & UI Logic ---
+        const applyDarkMode = () => {
+            const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', isDark);
+            darkModeSwitch.checked = isDark;
+        };
+        const applyColorTheme = (theme) => {
+             document.documentElement.classList.remove('theme-blue', 'theme-red', 'theme-indigo', 'theme-purple', 'theme-black', 'theme-pink');
+             document.documentElement.classList.add(theme);
+             localStorage.setItem('colorTheme', theme);
+        };
+        settingsButton.addEventListener('click', (e) => { e.stopPropagation(); settingsModal.classList.toggle('hidden'); populateSettingsModal(); });
+        document.addEventListener('click', (e) => { if (!settingsModal.contains(e.target) && !settingsButton.contains(e.target)) { settingsModal.classList.add('hidden'); } });
+        darkModeSwitch.addEventListener('change', () => { localStorage.theme = darkModeSwitch.checked ? 'dark' : 'light'; applyDarkMode(); updateDashboardView(); });
+        themeSelector.addEventListener('change', () => { applyColorTheme(themeSelector.value); updateDashboardView(); });
+        
+        document.getElementById('saveSettings')?.addEventListener('click', saveSettings);
+        document.getElementById('resetSettings')?.addEventListener('click', resetSettings);
+        
+        applyColorTheme(localStorage.getItem('colorTheme') || 'theme-blue');
+        themeSelector.value = localStorage.getItem('colorTheme') || 'theme-blue';
+        applyDarkMode();
+        loadSettings();
+        
+        // --- Modal Logic ---
+        closeModal.addEventListener('click', () => detailModal.classList.add('hidden'));
+        detailModal.addEventListener('click', (e) => { if(e.target === detailModal) detailModal.classList.add('hidden') });
+
+        // --- Utility Functions ---
+        const showNotification = (message, isError=false) => { notificationMessage.textContent = message; notification.classList.remove('hidden', 'bg-red-500', 'bg-green-600', 'translate-y-20'); notification.classList.add(isError ? 'bg-red-500' : 'bg-green-600'); setTimeout(() => { notification.classList.remove('translate-y-20'); }, 10); setTimeout(() => { notification.classList.add('translate-y-20'); setTimeout(() => notification.classList.add('hidden'), 5000); }, 5000); };
+        const normalizeHeader = (str) => str ? str.replace(/\s+/g, ' ').trim() : '';
+        const resetUI = () => { 
+            step2.classList.add('hidden'); 
+            stageNavigation.classList.add('hidden'); 
+            errorSummary.innerHTML = `<p class="text-gray-500 dark:text-gray-400">Select an engineer to see the validation summary.</p>`; 
+            csvFileInput.value = '';
+            typeSelect.value = 'all';
+            engineerSelect.innerHTML = '';
+            sbuSelect.innerHTML = '';
+            exportCsvButton.classList.add('hidden');
+        };
+        const parseDate = (dateStr) => { if (!dateStr) return null; let d = new Date(dateStr); if (!isNaN(d.getTime())) { d.setHours(0, 0, 0, 0); return d; } const parts = dateStr.match(/(\d{1,2})[ -/](\w{3})[-/, ](\d{4})/); if (parts) { const day = parseInt(parts[1], 10), year = parseInt(parts[3], 10); const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; const month = monthNames.findIndex(m => m.toLowerCase() === parts[2].toLowerCase()); if(month > -1) { let d2 = new Date(year, month, day); if(!isNaN(d2.getTime())) { d2.setHours(0,0,0,0); return d2; } } } return null; };
+
+        // --- Main Flow ---
+        csvFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            
+            setTimeout(() => {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    transformHeader: h => normalizeHeader(h),
+                    complete: (results) => {
+                        progressBar.style.width = '100%';
+                        progressBar.textContent = '100%';
+                        setTimeout(() => {
+                            progressContainer.classList.add('hidden');
+                        }, 500);
+
+                        if (results.errors.length > 0) {
+                            showNotification(`CSV parsing failed. Check file for errors.`, true);
+                            return resetUI();
+                        }
+                        if (!results.data || results.data.length === 0) {
+                             showNotification("CSV is empty or invalid.", true);
+                             return resetUI();
+                        }
+                        
+                        const headers = results.meta.fields;
+                        if (!headers || !Array.isArray(headers)) {
+                            showNotification('Could not read CSV headers. Please check the file format.', true);
+                            return resetUI();
+                        }
+
+                        const missing = REQUIRED_COLUMNS.filter(c => !headers.includes(normalizeHeader(c)));
+                        if (missing.length > 0) {
+                            showNotification(`Missing columns: ${missing.join(', ')}`, true);
+                            return resetUI();
+                        }
+                        
+                        fullDataset = results.data;
+                        originalHeaders = headers;
+                        
+                        rankedEngineers = calculateGlobalEngineerRanks(fullDataset);
+                        
+                        // Initial population of filters
+                        typeSelect.value = 'all';
+                        populateSbuFilter(fullDataset);
+                        populateEngineerFilter(rankedEngineers);
+
+
+                        step2.classList.remove('hidden');
+                        exportCsvButton.classList.remove('hidden');
+                        showNotification('File processed!', false);
+                        updateDashboardView();
+                    },
+                    error: (err) => {
+                        progressContainer.classList.add('hidden');
+                        showNotification(`Parsing error: ${err.message}`, true);
+                        resetUI();
+                    }
+                });
+            }, 10); // Small delay to allow the UI to update and show the progress bar
+        });
+        
+        // --- Filter Listeners ---
+        typeSelect.addEventListener('change', () => {
+            sbuSelect.value = '';
+            engineerSelect.value = '';
+            updateDashboardView();
+        });
+
+        sbuSelect.addEventListener('change', () => {
+            engineerSelect.value = '';
+            updateDashboardView();
+        });
+        
+        engineerSelect.addEventListener('change', () => {
+            updateDashboardView();
+        });
+        
+
+        const populateSbuFilter = (data) => {
+            const normSbu = normalizeHeader(SBU_COL);
+            const sbus = [...new Set(data.map(r => r[normSbu]).filter(Boolean))].sort();
+            sbuSelect.innerHTML = '<option value="">-- All SBUs --</option>';
+            sbus.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                sbuSelect.appendChild(opt);
+            });
+        };
+
+        const populateEngineerFilter = (engineersList) => {
+            engineerSelect.innerHTML = '<option value="">-- All Engineers --</option>';
+            engineersList.forEach(eng => {
+                const opt = document.createElement('option');
+                opt.value = eng.name;
+                opt.textContent = `${eng.ragStatus.dot} ${eng.rank}. ${eng.name}`;
+                engineerSelect.appendChild(opt);
+            });
+        };
+
+
+        const updateDashboardView = () => {
+            if (fullDataset.length === 0) return;
+
+            // 1. Read current selections
+            const selectedType = typeSelect.value;
+            const selectedSbu = sbuSelect.value;
+            const selectedEngineer = engineerSelect.value;
+
+            // 2. Determine data subsets for populating dependent dropdowns
+            let dataForSbus = fullDataset;
+            const autoSbus = ['SBU0104', 'SBU0106'];
+            if (selectedType === 'auto') {
+                dataForSbus = fullDataset.filter(r => autoSbus.includes(r[normalizeHeader(SBU_COL)]));
+            } else if (selectedType === 'non-auto') {
+                dataForSbus = fullDataset.filter(r => !autoSbus.includes(r[normalizeHeader(SBU_COL)]));
+            }
+            
+            let dataForEngineers = dataForSbus;
+            if (selectedSbu) {
+                dataForEngineers = dataForSbus.filter(r => r[normalizeHeader(SBU_COL)] === selectedSbu);
+            }
+            
+            // 3. Repopulate dropdowns and restore selections
+            populateSbuFilter(dataForSbus);
+            sbuSelect.value = selectedSbu;
+
+            const engineerNamesInScope = [...new Set(dataForEngineers.map(r => r[normalizeHeader(NPI_ENG_COL)]))];
+            const engineersToDisplay = rankedEngineers.filter(eng => engineerNamesInScope.includes(eng.name));
+            populateEngineerFilter(engineersToDisplay);
+            engineerSelect.value = selectedEngineer;
+
+            // 4. Determine final filtered data for dashboards
+            let filteredData = dataForEngineers;
+            if (selectedEngineer) {
+                filteredData = dataForEngineers.filter(r => r[normalizeHeader(NPI_ENG_COL)] === selectedEngineer);
+            }
+            
+            // 5. Get validation result first
+            const validationResult = validateData(filteredData);
+
+            // 6. Update summary box with validation error count
+            const summaryParts = [];
+            if(selectedType !== 'all') summaryParts.push(`Type: ${selectedType === 'auto' ? 'Auto' : 'Non-Auto'}`);
+            if(selectedSbu) summaryParts.push(`SBU: ${selectedSbu}`);
+            if(selectedEngineer) summaryParts.push(`Engineer: ${selectedEngineer}`);
+            
+            let summaryText = 'Displaying all data';
+            if (summaryParts.length > 0) {
+                summaryText = `For: ${summaryParts.join(', ')}`;
+            }
+            
+            const errorCount = validationResult.totalErrors;
+            const countColor = errorCount > 0 ? 'text-red-500' : 'text-green-500';
+
+            errorSummary.innerHTML = `
+                <div class="text-center">
+                    <p class="text-3xl font-bold ${countColor}">${errorCount}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" style="font-size: 11px;">Validation Errors</p>
+                    <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1 truncate" title="${summaryText}">${summaryText}</p>
+                </div>
+            `;
+            
+            // 7. Render dashboards and update error badge on tab
+            const performanceData = analyzeDataForPerformance(filteredData, fullDataset, selectedEngineer);
+
+            renderValidationReport(validationResult);
+            renderStage2Dashboard(analyzeDataForDashboard(filteredData, fullDataset));
+            renderStage3Dashboard(performanceData);
+            
+            if (stageTabs.stage4.classList.contains('active')) {
+                renderStage4BuPerformance();
+            }
+
+            const errorBadge = document.getElementById('error-badge');
+            if (errorCount > 0) {
+                errorBadge.textContent = errorCount > 99 ? '99+' : errorCount;
+                errorBadge.classList.remove('hidden');
+            } else {
+                errorBadge.classList.add('hidden');
+            }
+            
+            stageNavigation.classList.remove('hidden');
+            const currentTab = stageNavigation.querySelector('.active')?.id?.replace('tab-', '') || 'stage1';
+            switchToStage(currentTab, true); // Prevent re-rendering stage 4
+        };
+        
+        
+        // --- Analysis & Rendering Functions ---
+        const validateData = (data) => {
+            let totalErrors = 0;
+            const groupedErrors = {};
+            const buildLevelTracker = new Set();
+            const norm = (colName) => normalizeHeader(colName);
+        
+            data.forEach((row) => {
+                const rowErrors = new Set();
+                const addError = (msg, columns = []) => rowErrors.add(JSON.stringify({ msg, columns }));
+        
+                REQUIRED_COLUMNS.filter(c => c !== YIELD_COL).forEach(col => {
+                    if (!row[norm(col)]) addError(`Data missing in '${col}'.`, [col]);
+                });
+        
+                const soValue = row[norm(SO_COL)];
+                if (soValue && !/^[A-Z]{3}-[A-Z]{3}-\d{4}-\d{5}$/.test(soValue)) addError(`'${SO_COL}' has an invalid format.`, [SO_COL]);
+        
+                const sbuValue = row[norm(SBU_COL)];
+                if (sbuValue && !/^[A-Z]{3}\d{4}$/.test(sbuValue)) addError(`'${SBU_COL}' has an invalid format.`, [SBU_COL]);
+        
+                [PM_COL, NPI_ENG_COL, BUYER_COL].forEach(col => {
+                    const value = row[norm(col)];
+                    if (value && value !== value.toUpperCase()) addError(`'${col}' must be in all caps.`, [col]);
+                });
+        
+                const crpReleased = parseDate(row[norm(RELEASED_DATE_COL)]),
+                          crpPromised = parseDate(row[norm(PROMISED_DATE_COL)]),
+                          revisedPromised = parseDate(row[norm(REVISED_DATE_COL)]),
+                          soCrpDate = parseDate(row[norm(SO_CRP_DATE_COL)]),
+                          bomApproved = parseDate(row[norm(BOM_APPROVED_DATE_COL)]);
+        
+                if (crpReleased && crpPromised && crpReleased > crpPromised) addError(`'${RELEASED_DATE_COL}' cannot be after '${PROMISED_DATE_COL}'.`, [RELEASED_DATE_COL, PROMISED_DATE_COL]);
+                if (crpReleased && revisedPromised && crpReleased > revisedPromised) addError(`'${RELEASED_DATE_COL}' cannot be after '${REVISED_DATE_COL}'.`, [RELEASED_DATE_COL, REVISED_DATE_COL]);
+                if (soCrpDate && crpReleased && soCrpDate > crpReleased) addError(`'${SO_CRP_DATE_COL}' must be same or earlier than '${RELEASED_DATE_COL}'.`, [SO_CRP_DATE_COL, RELEASED_DATE_COL]);
+                if (crpPromised && revisedPromised && crpPromised > revisedPromised) addError(`'${PROMISED_DATE_COL}' must be earlier than or same as '${REVISED_DATE_COL}'.`, [PROMISED_DATE_COL, REVISED_DATE_COL]);
+                if (!bomApproved && row[norm(BOM_APPROVED_DATE_COL)]) addError(`'${BOM_APPROVED_DATE_COL}' is not a valid date.`, [BOM_APPROVED_DATE_COL]);
+                if (bomApproved && crpReleased && bomApproved < crpReleased) addError(`'${BOM_APPROVED_DATE_COL}' must be latest date vs '${RELEASED_DATE_COL}'.`, [BOM_APPROVED_DATE_COL, RELEASED_DATE_COL]);
+                if (bomApproved && soCrpDate && bomApproved < soCrpDate) addError(`'${BOM_APPROVED_DATE_COL}' must be latest date vs '${SO_CRP_DATE_COL}'.`, [BOM_APPROVED_DATE_COL, SO_CRP_DATE_COL]);
+        
+                const pendingReason = row[norm(PENDING_REASON_COL)],
+                          pendingReasonUpper = pendingReason ? pendingReason.toUpperCase() : '';
+                if (pendingReasonUpper.includes('FG') && !row[norm(YIELD_COL)]) addError(`Data missing in '${YIELD_COL}' (Required for FG status).`, [YIELD_COL, PENDING_REASON_COL]);
+        
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                let deadlineDate = revisedPromised || crpPromised;
+                if (deadlineDate && today > deadlineDate && !pendingReasonUpper.includes('FG')) {
+                    const daysOverdue = Math.ceil((today - deadlineDate) / (1000 * 3600 * 24));
+                    addError(`Project is overdue`);
+                    row._overdueDays = daysOverdue;
+                }
+        
+                const fgPart = row[norm(FG_PART_NO_COL)],
+                          buildLevel = row[norm(BUILD_LEVEL_COL)];
+                if (fgPart && buildLevel) {
+                    const compositeKey = `${fgPart}|${buildLevel}`;
+                    if (buildLevelTracker.has(compositeKey)) addError(`Duplicate entry for '${FG_PART_NO_COL}' at the same '${BUILD_LEVEL_COL}'.`, [FG_PART_NO_COL, BUILD_LEVEL_COL]);
+                    else buildLevelTracker.add(compositeKey);
+                }
+        
+                if (rowErrors.size > 0) {
+                    const uniqueErrors = [...new Set(rowErrors)];
+                    uniqueErrors.forEach(errorMsg => {
+                        if (!groupedErrors[errorMsg]) groupedErrors[errorMsg] = { rows: [], columns: JSON.parse(errorMsg).columns };
+                        groupedErrors[errorMsg].rows.push(row);
+                    });
+                    totalErrors += uniqueErrors.length;
+                }
+            });
+            return { totalErrors, groupedErrors };
+        };
+        
+        const renderValidationReport = ({ totalErrors, groupedErrors }) => {
+            errorAccordionContainer.innerHTML = '';
+            if (totalErrors === 0) {
+                errorAccordionContainer.innerHTML = `<div class="p-6 text-center bg-white dark:bg-gray-800"><div class="text-green-600"><svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><h3 class="mt-2 text-lg font-medium">Validation Passed!</h3><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">No errors found.</p></div></div>`;
+                return;
+            }
+            const norm = (colName) => normalizeHeader(colName);
+            let errorIndex = 1;
+            for (const [errorKey, { rows, columns }] of Object.entries(groupedErrors)) {
+                const errorMsg = JSON.parse(errorKey).msg;
+                const details = document.createElement('details');
+                details.className = 'bg-white dark:bg-gray-800';
+                const overdueError = errorMsg === 'Project is overdue';
+                let headers = [SL_NO_COL, FG_PART_NO_COL, DESCRIPTION_COL, 'Status', ...columns];
+                if (overdueError) headers.push('Days Overdue');
+
+                let tableHeaderHTML = [...new Set(headers)].map(h => `<th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">${h}</th>`).join('');
+
+                let tableBodyHTML = rows.map(row => {
+                    let rowHTML = `<tr><td class="px-4 py-2 whitespace-nowrap">${row[norm(SL_NO_COL)] || ''}</td><td class="px-4 py-2 whitespace-nowrap">${row[norm(FG_PART_NO_COL)] || ''}</td><td class="px-4 py-2 whitespace-nowrap">${row[norm(DESCRIPTION_COL)] || ''}</td><td class="px-4 py-2 whitespace-nowrap">${row[norm(PENDING_REASON_COL)] || ''}</td>`;
+                    [...new Set(columns)].forEach(col => {
+                        rowHTML += `<td class="px-4 py-2 whitespace-nowrap">${row[norm(col)] || '<span class="text-xs italic text-gray-400">EMPTY</span>'}</td>`
+                    });
+                    if (overdueError) rowHTML += `<td class="px-4 py-2 text-red-600 font-bold">${row._overdueDays || 'N/A'}</td>`;
+                    rowHTML += `</tr>`;
+                    return rowHTML;
+                }).join('');
+
+                details.innerHTML = `<summary class="flex justify-between items-center font-medium"><div class="flex items-center"><span class="mr-3 font-bold text-red-600">${errorIndex++}.</span><span>${errorMsg}</span></div><div class="flex items-center"><span class="text-sm font-semibold text-white bg-red-500 rounded-full px-2 py-0.5">${rows.length} items</span><svg class="summary-arrow h-5 w-5 ml-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></div></summary><div class="p-4 border-t border-gray-200 dark:border-gray-700 overflow-x-auto"><table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm"><thead class="bg-gray-50 dark:bg-gray-700"><tr>${tableHeaderHTML}</tr></thead><tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">${tableBodyHTML}</tbody></table></div>`;
+                errorAccordionContainer.appendChild(details);
+            }
+        };
+
+        const analyzeDataForDashboard = (data, allData) => {
+            const norm = normalizeHeader;
+            let completedCount = 0, statusCounts = {}, overdueProjects = [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const processCounts = (dataset) => {
+                const buildLevelCounts = { 'Proto I': 0, 'Proto II': 0, 'Proto III': 0, 'LVPT': 0, 'HVPT': 0, 'QP Sign off': 0 };
+                let fgCount = 0, holdCount = 0, sCloseCount = 0, kemCount = 0;
+                dataset.forEach(row => {
+                    const status = (row[norm(PENDING_REASON_COL)] || '').toUpperCase();
+                    if (status.includes('FG')) { 
+                        fgCount++; 
+                        const buildLevel = (row[norm(BUILD_LEVEL_COL)] || '').trim();
+                        if (buildLevel === 'QP Sign off') {
+                             buildLevelCounts['QP Sign off']++;
+                        }
+                    }
+                    else if (status.includes('HOLD')) { holdCount++; }
+                    else if (status.includes('S.CLOSE')) { sCloseCount++; }
+                    else if (status.includes('KEM')) { kemCount++; }
+                    else {
+                        const buildLevel = (row[norm(BUILD_LEVEL_COL)] || '').trim();
+                        if (buildLevelCounts.hasOwnProperty(buildLevel) && buildLevel !== 'QP Sign off') {
+                            buildLevelCounts[buildLevel]++;
+                        }
+                    }
+                });
+                const projectsInHand = buildLevelCounts['Proto I'] + buildLevelCounts['Proto II'] + buildLevelCounts['Proto III'] + buildLevelCounts['LVPT'] + buildLevelCounts['HVPT'];
+                return { buildLevelCounts, fgCount, holdCount, sCloseCount, kemCount, projectsInHand };
+            };
+
+            const individualCounts = processCounts(data);
+            const totalCounts = processCounts(allData);
+            
+            data.forEach(row => {
+                const status = row[norm(PENDING_REASON_COL)] || 'Unknown',
+                          statusUpper = status.toUpperCase();
+                if (statusUpper.includes('FG')) completedCount++;
+                statusCounts[status] = (statusCounts[status] || 0) + 1;
+                
+                const revisedDateStr = row[norm(REVISED_DATE_COL)],
+                          promisedDateStr = row[norm(PROMISED_DATE_COL)];
+                let deadlineDate = null;
+                if (revisedDateStr && !isNaN(new Date(revisedDateStr).getTime())) deadlineDate = new Date(revisedDateStr);
+                else if (promisedDateStr && !isNaN(new Date(promisedDateStr).getTime())) deadlineDate = new Date(promisedDateStr);
+                
+                if (deadlineDate && today > deadlineDate && !statusUpper.includes('FG')) overdueProjects.push(row);
+            });
+
+            return {
+                totalProjects: data.length,
+                completedCount,
+                overdueProjects,
+                statusCounts,
+                individualCounts,
+                totalCounts,
+            };
+        };
+
+        const renderStage2Dashboard = (dashboardData) => {
+            const { totalProjects, completedCount, overdueProjects, statusCounts, individualCounts, totalCounts } = dashboardData;
+            const norm = normalizeHeader;
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const chartFontColor = isDarkMode ? '#E5E7EB' : '#4B5563';
+
+            const buildLevelOverviewHTML = `
+                <div class="card p-6 rounded-lg col-span-1 md:col-span-3 mb-8">
+                    <h3 class="text-lg font-semibold mb-4">Build Level & Status Overview</h3>
+                     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-11 gap-4 text-center">
+                        ${Object.entries(individualCounts.buildLevelCounts || {}).map(([level, count]) => `
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">${level}</p>
+                                <p class="text-2xl font-bold text-theme-primary">${count}</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500">Total: ${totalCounts.buildLevelCounts[level] || 0}</p>
+                            </div>
+                        `).join('')}
+                         <div class="border-l border-gray-200 dark:border-gray-700 pl-4">
+                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">In Hand</p>
+                             <p class="text-2xl font-bold text-yellow-500">${individualCounts.projectsInHand || 0}</p>
+                             <p class="text-xs text-gray-400 dark:text-gray-500">Total: ${totalCounts.projectsInHand || 0}</p>
+                         </div>
+                         <div class="border-l border-gray-200 dark:border-gray-700 pl-4">
+                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">FG</p>
+                             <p class="text-2xl font-bold text-green-600">${individualCounts.fgCount || 0}</p>
+                             <p class="text-xs text-gray-400 dark:text-gray-500">Total: ${totalCounts.fgCount || 0}</p>
+                         </div>
+                         <div class="border-l border-gray-200 dark:border-gray-700 pl-4">
+                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Hold</p>
+                             <p class="text-2xl font-bold text-red-500">${individualCounts.holdCount || 0}</p>
+                             <p class="text-xs text-gray-400 dark:text-gray-500">Total: ${totalCounts.holdCount || 0}</p>
+                         </div>
+                          <div class="border-l border-gray-200 dark:border-gray-700 pl-4">
+                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">S.Close</p>
+                             <p class="text-2xl font-bold text-gray-500">${individualCounts.sCloseCount || 0}</p>
+                             <p class="text-xs text-gray-400 dark:text-gray-500">Total: ${totalCounts.sCloseCount || 0}</p>
+                         </div>
+                          <div class="border-l border-gray-200 dark:border-gray-700 pl-4">
+                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">KEM</p>
+                             <p class="text-2xl font-bold text-purple-500">${individualCounts.kemCount || 0}</p>
+                             <p class="text-xs text-gray-400 dark:text-gray-500">Total: ${totalCounts.kemCount || 0}</p>
+                         </div>
+                    </div>
+                </div>`;
+            
+            const dashboardHTML = `
+                ${buildLevelOverviewHTML}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card p-6 rounded-lg text-center"><p class="text-sm text-gray-500 dark:text-gray-400">Total Projects</p><p class="text-4xl font-bold text-theme-primary">${totalProjects}</p></div>
+                    <div class="card p-6 rounded-lg text-center"><p class="text-sm text-gray-500 dark:text-gray-400">Completed (FG)</p><p class="text-4xl font-bold text-green-600">${completedCount}</p></div>
+                    <div class="card p-6 rounded-lg text-center"><p class="text-sm text-gray-500 dark:text-gray-400">Overdue</p><p class="text-4xl font-bold text-red-600">${overdueProjects.length}</p></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 card p-6 rounded-lg space-y-4">
+                        <div class="pt-4">
+                            <h3 class="text-lg font-semibold mb-4">Overdue Projects</h3>
+                            <div class="overflow-x-auto max-h-64 border dark:border-gray-700 rounded-lg">
+                                <table class="min-w-full text-sm">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Sl No</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Customer</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-300">FG Part Number</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Description</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y dark:divide-gray-700">
+                                        ${overdueProjects.length > 0 ? overdueProjects.map(r => `<tr><td class="px-4 py-2">${r[norm(SL_NO_COL)]}</td><td class="px-4 py-2">${r[norm(CUSTOMER_COL)]}</td><td class="px-4 py-2">${r[norm(FG_PART_NO_COL)]}</td><td class="px-4 py-2">${r[norm(DESCRIPTION_COL)]}</td><td class="px-4 py-2">${r[norm(PENDING_REASON_COL)]}</td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">No overdue projects.</td></tr>`}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1 card p-6 rounded-lg flex flex-col">
+                        <h3 class="text-lg font-semibold mb-4">Status Breakdown</h3>
+                        <div class="relative flex-grow h-64 md:h-auto"><canvas id="statusChart"></canvas></div>
+                    </div>
+                </div>`;
+            stage2Content.innerHTML = dashboardHTML;
+            
+            if (activeCharts['statusChart']) activeCharts['statusChart'].destroy();
+            activeCharts['statusChart'] = new Chart(document.getElementById('statusChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#6366F1', '#8B5CF6', '#EC4899'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { color: chartFontColor } } }
+                }
+            });
+        };
+
+        const analyzeDataForPerformance = (selectedEngineerData, allData, selectedEngineerName) => {
+            const norm = normalizeHeader;
+            let allEngineerScores = [];
+
+            const processData = (dataset) => {
+                const partsData = {};
+                const buildLevelCounts = { 'Proto I': 0, 'Proto II': 0, 'Proto III': 0, 'LVPT': 0, 'HVPT': 0 };
+                let qpSignOffCount = 0;
+                
+                dataset.forEach(row => {
+                    const status = (row[norm(PENDING_REASON_COL)] || '').toUpperCase();
+                    const partNo = row[norm(FG_PART_NO_COL)];
+                    const buildLevel = (row[norm(BUILD_LEVEL_COL)] || '').trim();
+                    
+                    if (buildLevelCounts.hasOwnProperty(buildLevel)) {
+                         if (!status.includes('FG') && !status.includes('HOLD') && !status.includes('S.CLOSE') && !status.includes('KEM')) {
+                             buildLevelCounts[buildLevel]++;
+                         }
+                    } else if (buildLevel === 'QP Sign off') {
+                        qpSignOffCount++;
+                    }
+
+                    if (!partNo) return;
+                    if (!partsData[partNo]) {
+                        partsData[partNo] = new Set();
+                    }
+                    if (buildLevel) {
+                        partsData[partNo].add(buildLevel.toLowerCase());
+                    }
+                });
+
+                const workloadScore =
+                    (buildLevelCounts['Proto I'] * settings.weights['Proto I']) +
+                    (buildLevelCounts['Proto II'] * settings.weights['Proto II']) +
+                    (buildLevelCounts['Proto III'] * settings.weights['Proto III']) +
+                    (buildLevelCounts['LVPT'] * settings.weights['LVPT']) +
+                    (buildLevelCounts['HVPT'] * settings.weights['HVPT']);
+                    
+                const rankingScore = workloadScore + qpSignOffCount;
+
+                const qpDenominator = qpSignOffCount + buildLevelCounts['LVPT'] + buildLevelCounts['HVPT'];
+
+                let performance = { totalYield: 0, yieldCount: 0, buildLevelSum: 0, partCount: 0 };
+                dataset.forEach(row => {
+                    const yieldVal = parseFloat(row[norm(YIELD_COL)]);
+                    if (!isNaN(yieldVal)) {
+                        performance.totalYield += yieldVal;
+                        performance.yieldCount++;
+                    }
+                });
+                for (const partNo in partsData) {
+                    performance.buildLevelSum += partsData[partNo].size;
+                }
+                performance.partCount = Object.keys(partsData).length;
+
+                return {
+                    workloadScore,
+                    rankingScore,
+                    qpConversionRate: qpDenominator > 0 ? (qpSignOffCount / qpDenominator * 100) : 0,
+                    qpConversionCount: qpSignOffCount,
+                    totalEligibleProjects: qpDenominator,
+                    avgYield: performance.yieldCount > 0 ? (performance.totalYield / performance.yieldCount) : 0,
+                    yieldCount: performance.yieldCount,
+                    totalYield: performance.totalYield,
+                    avgBuildLevelsPerPart: performance.partCount > 0 ? (performance.buildLevelSum / performance.partCount) : 0,
+                    buildLevelSum: performance.buildLevelSum,
+                    partCount: performance.partCount,
+                };
+            };
+            
+            const engineerGroups = allData.reduce((acc, row) => {
+                const eng = row[norm(NPI_ENG_COL)];
+                if (eng) (acc[eng] = acc[eng] || []).push(row);
+                return acc;
+            }, {});
+
+            for (const name in engineerGroups) {
+                const stats = processData(engineerGroups[name]);
+                allEngineerScores.push({ name, ...stats });
+            }
+
+            const individualStats = allEngineerScores.find(e => e.name === selectedEngineerName) || processData(selectedEngineerData);
+
+            const highestWorkload = Math.max(0, ...allEngineerScores.map(e => e.workloadScore));
+            const workloadBenchmark = highestWorkload * 1.25;
+            
+            allEngineerScores.sort((a, b) => b.rankingScore - a.rankingScore);
+            const individualRank = allEngineerScores.findIndex(e => e.name === selectedEngineerName) + 1;
+            
+            allEngineerScores.sort((a, b) => b.workloadScore - a.workloadScore);
+            const isTopContributor = allEngineerScores.slice(0, 2).some(e => e.name === selectedEngineerName);
+
+            // Calculate overall stats for peers
+            const overallStats = processData(allData);
+
+            const peerAvg = {
+                overallQpConversionRate: overallStats.qpConversionRate,
+                totalQpConversionCount: overallStats.qpConversionCount,
+                totalEligibleProjects: overallStats.totalEligibleProjects,
+                overallAvgYield: overallStats.avgYield,
+                totalYieldProjectCount: overallStats.yieldCount,
+                overallAvgBuildLevels: overallStats.avgBuildLevelsPerPart,
+                totalBuildLevelSum: overallStats.buildLevelSum,
+                totalPartCount: overallStats.partCount,
+            };
+
+            return {
+                individual: individualStats,
+                peerAvg: peerAvg,
+                workloadBenchmark,
+                individualRank,
+                totalPeers: allEngineerScores.length - (selectedEngineerName ? 1 : 0),
+                isTopContributor,
+            };
+        };
+
+        const getWorkloadRagStatus = (score, benchmark, thresholds) => {
+            if (benchmark === 0) return { color: 'bg-gray-500', text: 'N/A', dot: '⚪' };
+            const ratio = (score / benchmark) * 100;
+            const t = thresholds;
+
+            if (ratio > t.high) return { color: 'bg-red-500', text: 'Overloaded', dot: '🔴' };
+            if (ratio > t.optimum) return { color: 'bg-orange-500', text: 'High', dot: '🟠' };
+            if (ratio > t.stretching) return { color: 'bg-blue-500', text: 'Optimum', dot: '🔵' };
+            if (ratio > t.low) return { color: 'bg-yellow-500', text: 'Stretching', dot: '🟡' };
+            return { color: 'bg-green-500', text: 'Low', dot: '🟢' };
+        };
+        
+        const calculateGlobalEngineerRanks = (allData) => {
+            const norm = normalizeHeader;
+            
+            const processDataForRank = (dataset) => {
+                const buildLevelCounts = { 'Proto I': 0, 'Proto II': 0, 'Proto III': 0, 'LVPT': 0, 'HVPT': 0 };
+                let qpSignOffCount = 0;
+
+                dataset.forEach(row => {
+                    const status = (row[norm(PENDING_REASON_COL)] || '').toUpperCase();
+                    const buildLevel = (row[norm(BUILD_LEVEL_COL)] || '').trim();
+
+                    if (buildLevelCounts.hasOwnProperty(buildLevel)) {
+                        if (!status.includes('FG') && !status.includes('HOLD') && !status.includes('S.CLOSE') && !status.includes('KEM')) {
+                            buildLevelCounts[buildLevel]++;
+                        }
+                    } else if (buildLevel === 'QP Sign off') {
+                        qpSignOffCount++;
+                    }
+                });
+
+                const workloadScore =
+                    (buildLevelCounts['Proto I'] * settings.weights['Proto I']) +
+                    (buildLevelCounts['Proto II'] * settings.weights['Proto II']) +
+                    (buildLevelCounts['Proto III'] * settings.weights['Proto III']) +
+                    (buildLevelCounts['LVPT'] * settings.weights['LVPT']) +
+                    (buildLevelCounts['HVPT'] * settings.weights['HVPT']);
+
+                const rankingScore = workloadScore + qpSignOffCount;
+                return { workloadScore, rankingScore, qpSignOffCount };
+            };
+
+            const engineerGroups = allData.reduce((acc, row) => {
+                const eng = row[norm(NPI_ENG_COL)];
+                if (eng) (acc[eng] = acc[eng] || []).push(row);
+                return acc;
+            }, {});
+
+            let allEngineerScores = [];
+            for (const name in engineerGroups) {
+                const stats = processDataForRank(engineerGroups[name]);
+                allEngineerScores.push({ name, ...stats });
+            }
+
+            const highestWorkload = Math.max(0, ...allEngineerScores.map(e => e.workloadScore));
+            const workloadBenchmark = highestWorkload * 1.25;
+
+            allEngineerScores.forEach(eng => {
+                eng.ragStatus = getWorkloadRagStatus(eng.workloadScore, workloadBenchmark, settings.ragThresholds);
+            });
+
+            allEngineerScores.sort((a, b) => b.rankingScore - a.rankingScore);
+
+            return allEngineerScores.map((eng, index) => ({ ...eng, rank: index + 1 }));
+        };
+
+
+        const renderStage3Dashboard = (performanceData) => {
+            const { individual, peerAvg, workloadBenchmark, individualRank, totalPeers, isTopContributor } = performanceData;
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const chartFontColor = isDarkMode ? '#E5E7EB' : '#4B5563';
+            const chartGridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+            const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-secondary').trim();
+
+            const createBarChart = (id, labels, data, options = {}) => {
+                if (activeCharts[id]) activeCharts[id].destroy();
+                const defaultOptions = {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: chartGridColor }, ticks: { color: chartFontColor } },
+                        y: { grid: { display: false }, ticks: { color: chartFontColor } }
+                    }
+                };
+                activeCharts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{ data: data, backgroundColor: [primaryColor, secondaryColor] }]
+                    },
+                    options: { ...defaultOptions, ...options }
+                });
+            };
+            
+            const workloadRag = getWorkloadRagStatus(individual.workloadScore, workloadBenchmark, settings.ragThresholds);
+
+            const workloadCardHTML = `
+                <div class="card p-6 rounded-lg relative">
+                    ${isTopContributor ? '<span class="absolute top-2 right-2 text-xs font-bold bg-yellow-400 text-yellow-800 px-2 py-1 rounded-full">Top Contributor</span>' : ''}
+                    <h3 class="text-lg font-semibold mb-4">Workload Status</h3>
+                    <div class="flex items-center justify-center space-x-4 mb-4">
+                        <div class="w-8 h-8 rounded-full ${workloadRag.color}"></div>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">${workloadRag.text}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Score</p>
+                            <p class="text-3xl font-bold text-theme-primary">${(individual.workloadScore || 0).toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Benchmark</p>
+                            <p class="text-3xl font-bold text-theme-secondary">${(workloadBenchmark || 0).toFixed(2)}</p>
+                        </div>
+                    </div>
+                </div>`;
+            
+             const getOrdinal = (n) => {
+                  if(n <= 0) return "N/A";
+                  const s = ["th", "st", "nd", "rd"];
+                  const v = n % 100;
+                  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+             }
+
+            const rankingCardHTML = `
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-4">Ranking</h3>
+                    <div class="grid grid-cols-2 gap-4 text-center mt-8">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rank</p>
+                            <p class="text-3xl font-bold text-theme-primary">${getOrdinal(individualRank)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Peers</p>
+                            <p class="text-3xl font-bold text-theme-secondary">${totalPeers}</p>
+                        </div>
+                    </div>
+                </div>`;
+
+
+            const qpCardHTML = `
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-4">QP Sign Off Conversion Rate</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Rate</p>
+                            <p class="text-3xl font-bold text-theme-primary">${(individual.qpConversionRate || 0).toFixed(1)}%</p>
+                            <p class="text-xs text-gray-400">${individual.qpConversionCount || 0}/${individual.totalEligibleProjects || 0} 
+                                <span class="tooltip-container relative inline-block">
+                                    eligible projects
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span class="tooltip-text">Denominator is the sum of projects at QP Sign Off, LVPT, and HVPT build levels.</span>
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Peers' Overall Rate</p>
+                            <p class="text-3xl font-bold text-theme-secondary">${(peerAvg.overallQpConversionRate || 0).toFixed(1)}%</p>
+                            <p class="text-xs text-gray-400">${peerAvg.totalQpConversionCount || 0}/${peerAvg.totalEligibleProjects || 0} 
+                                 <span class="tooltip-container relative inline-block">
+                                    eligible projects
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span class="tooltip-text">Denominator is the sum of projects at QP Sign Off, LVPT, and HVPT build levels.</span>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="relative h-24"><canvas id="qpChart"></canvas></div>
+                </div>`;
+
+            const yieldCardHTML = `
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-4">Average Yield</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Average</p>
+                            <p class="text-3xl font-bold text-theme-primary">${(individual.avgYield || 0).toFixed(2)}%</p>
+                            <p class="text-xs text-gray-400">${individual.yieldCount || 0} projects</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Peers' Overall Average</p>
+                            <p class="text-3xl font-bold text-theme-secondary">${(peerAvg.overallAvgYield || 0).toFixed(2)}%</p>
+                            <p class="text-xs text-gray-400">${peerAvg.totalYieldProjectCount || 0} projects</p>
+                        </div>
+                    </div>
+                    <div class="relative h-24"><canvas id="yieldChart"></canvas></div>
+                </div>`;
+
+            const buildLevelCardHTML = `
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-4">Avg Build Levels / Part #</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Average</p>
+                            <p class="text-3xl font-bold text-theme-primary">${(individual.avgBuildLevelsPerPart || 0).toFixed(2)}</p>
+                            <p class="text-xs text-gray-400">${individual.buildLevelSum || 0} levels / ${individual.partCount || 0} parts</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Peers' Overall Average</p>
+                            <p class="text-3xl font-bold text-theme-secondary">${(peerAvg.overallAvgBuildLevels || 0).toFixed(2)}</p>
+                            <p class="text-xs text-gray-400">${peerAvg.totalBuildLevelSum || 0} levels / ${peerAvg.totalPartCount || 0} parts</p>
+                        </div>
+                    </div>
+                    <div class="relative h-24"><canvas id="buildLevelChart"></canvas></div>
+                </div>`;
+
+            stage3Content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        ${workloadCardHTML}
+                        ${rankingCardHTML}
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        ${qpCardHTML}
+                        ${yieldCardHTML}
+                        ${buildLevelCardHTML}
+                    </div>
+                </div>
+            `;
+
+            const percentScale = { scales: { x: { ticks: { callback: value => value.toFixed(1) + '%' } } } };
+            
+            createBarChart('qpChart', ['You', 'Peer Avg.'], [individual.qpConversionRate, peerAvg.overallQpConversionRate], percentScale);
+            createBarChart('yieldChart', ['You', 'Peers'], [individual.avgYield, peerAvg.overallAvgYield], percentScale);
+            createBarChart('buildLevelChart', ['You', 'Peer Avg.'], [individual.avgBuildLevelsPerPart, peerAvg.overallAvgBuildLevels]);
+        };
+        const renderStage4BuPerformance = () => {
+            const norm = normalizeHeader;
+            
+            // This function is now only responsible for updating the filters and the table.
+            // The controls are already in the HTML.
+
+            // Define helper functions first to avoid any potential initialization issues
+            const updatePivotTable = () => {
+                const pivotByBuildLevel = document.getElementById('pivotToggleSwitch').checked;
+                const pivotColumn = pivotByBuildLevel ? BUILD_LEVEL_COL : PENDING_REASON_COL;
+
+                const getSelected = (id) => {
+                    const container = document.getElementById(`${id}Options`);
+                    if (!container || container.querySelector('[data-type="all"]').checked) return [];
+                    return Array.from(container.querySelectorAll('[data-type="option"]:checked')).map(cb => cb.value);
+                };
+
+                const selectedSbus = getSelected('sbuFilter'),
+                          selectedBuildLevels = getSelected('buildLevelFilter'),
+                          selectedEngineers = getSelected('engineerFilter'),
+                          selectedStatuses = getSelected('statusFilter');
+
+                let filteredData = fullDataset;
+                if (selectedSbus.length > 0) { filteredData = filteredData.filter(row => selectedSbus.includes(row[norm(SBU_COL)])); }
+                if (selectedBuildLevels.length > 0) { filteredData = filteredData.filter(row => selectedBuildLevels.includes(row[norm(BUILD_LEVEL_COL)])); }
+                if (selectedEngineers.length > 0) { filteredData = filteredData.filter(row => selectedEngineers.includes(row[norm(NPI_ENG_COL)])); }
+                if (selectedStatuses.length > 0) { filteredData = filteredData.filter(row => selectedStatuses.includes(row[norm(PENDING_REASON_COL)])); }
+
+                const pivotData = {};
+                
+                const savedOrders = JSON.parse(localStorage.getItem('npiColumnOrders')) || {};
+                const uniqueCategories = [...new Set(filteredData.map(row => row[norm(pivotColumn)]).filter(Boolean))];
+                let allCategories;
+
+                if (pivotByBuildLevel) {
+                    const savedOrder = savedOrders.buildLevels || [];
+                    const ordered = savedOrder.filter(item => uniqueCategories.includes(item));
+                    const unordered = uniqueCategories.filter(item => !savedOrder.includes(item)).sort();
+                    allCategories = [...ordered, ...unordered];
+                } else {
+                    const savedOrder = savedOrders.statuses || [];
+                    const ordered = savedOrder.filter(item => uniqueCategories.includes(item));
+                    const unordered = uniqueCategories.filter(item => !savedOrder.includes(item)).sort();
+                    allCategories = [...ordered, ...unordered];
+                }
+
+                
+                filteredData.forEach(row => {
+                    const sbu = row[norm(SBU_COL)];
+                    const engineer = row[norm(NPI_ENG_COL)];
+                    const categoryValue = row[norm(pivotColumn)];
+
+                    if (!sbu || !engineer) return;
+                    if (!pivotData[sbu]) pivotData[sbu] = {};
+                    if (!pivotData[sbu][engineer]) {
+                        pivotData[sbu][engineer] = { GrandTotal: 0 };
+                        allCategories.forEach(cat => pivotData[sbu][engineer][cat] = 0);
+                    }
+                    if (categoryValue) {
+                        pivotData[sbu][engineer][categoryValue] = (pivotData[sbu][engineer][categoryValue] || 0) + 1;
+                    }
+                    pivotData[sbu][engineer].GrandTotal++;
+                });
+
+                const isDarkMode = document.documentElement.classList.contains('dark');
+                let table = `<table class="min-w-full text-sm whitespace-nowrap"><thead class="${isDarkMode ? 'bg-gray-900' : 'bg-gray-800'} text-white"><tr class="text-left"><th class="p-3">SBU</th><th class="p-3">NPI Engineer</th>${allCategories.map(c => `<th class="p-3">${c}</th>`).join('')}<th class="p-3">Grand Total</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">`;
+                
+                let grandTotalData = { GrandTotal: 0 };
+                allCategories.forEach(c => grandTotalData[c] = 0);
+                
+                for (const sbu in pivotData) {
+                    const engineers = Object.keys(pivotData[sbu]).sort();
+                    engineers.forEach((engineer) => {
+                        const data = pivotData[sbu][engineer];
+                        table += `<tr class="${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}"><td class="p-3 font-semibold">${sbu}</td><td class="p-3">${engineer}</td>`;
+                        allCategories.forEach(cat => {
+                            table += `<td class="p-3 text-center">${data[cat] ? `<button class="text-theme-primary hover:underline" data-sbu="${sbu}" data-engineer="${engineer}" data-pivot-value="${cat}">${data[cat]}</button>` : ''}</td>`;
+                        });
+                        table += `<td class="p-3 text-center font-bold"><button class="text-theme-primary hover:underline" data-sbu="${sbu}" data-engineer="${engineer}" data-pivot-value="All">${data.GrandTotal}</button></td></tr>`;
+                    });
+                }
+                
+                allCategories.forEach(cat => {
+                    grandTotalData[cat] = Object.values(pivotData).flatMap(engs => Object.values(engs)).reduce((sum, data) => sum + (data[cat] || 0), 0);
+                });
+                grandTotalData.GrandTotal = Object.values(pivotData).flatMap(engs => Object.values(engs)).reduce((sum, data) => sum + data.GrandTotal, 0);
+                
+                table += `<tr class="font-extrabold text-base ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-300 text-black'}"><td class="p-3" colspan="2">Grand Total</td>`;
+                allCategories.forEach(c => {
+                    table += `<td class="p-3 text-center">${grandTotalData[c]}</td>`;
+                });
+                table += `<td class="p-3 text-center">${grandTotalData.GrandTotal}</td></tr>`;
+                table += '</tbody></table>';
+                
+                const pivotContainer = document.getElementById('pivotTableContainer');
+                if (pivotContainer) pivotContainer.innerHTML = table;
+
+                document.querySelectorAll('#pivotTableContainer button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const { sbu, engineer, pivotValue } = button.dataset;
+                        showDetails(sbu, engineer, pivotValue, pivotColumn, filteredData);
+                    });
+                });
+            };
+
+            const showDetails = (sbu, engineer, pivotValue, pivotColumn, data) => {
+                let drilldownData = data;
+                if (sbu !== 'All') drilldownData = drilldownData.filter(r => r[norm(SBU_COL)] === sbu);
+                if (engineer !== 'All') drilldownData = drilldownData.filter(r => r[norm(NPI_ENG_COL)] === engineer);
+                if (pivotValue !== 'All') {
+                    drilldownData = drilldownData.filter(r => r[norm(pivotColumn)] === pivotValue);
+                }
+                
+                const pivotByBuildLevel = document.getElementById('pivotToggleSwitch')?.checked;
+                modalTitle.textContent = `Details for ${engineer} in ${sbu} (${pivotValue === 'All' ? `All ${pivotByBuildLevel ? 'Build Levels' : 'Statuses'}` : pivotValue})`;
+                
+                const detailColumns = [SL_NO_COL, FG_PART_NO_COL, DESCRIPTION_COL, QTY_COL, PER_UNIT_VALUE_COL, CUSTOMER_COL, SBU_COL, PM_COL, BUYER_COL, NPM_ACTION_COL, REVISED_DATE_COL, PENDING_REASON_COL, BUILD_LEVEL_COL, 'Update Status'];
+                let table = `<table class="min-w-full text-sm"><thead class="bg-gray-50 dark:bg-gray-700 sticky top-0"><tr>${detailColumns.map(h => `<th class="p-2 text-left">${h}</th>`).join('')}</tr></thead><tbody class="divide-y dark:divide-gray-700">`;
+                
+                drilldownData.forEach((row, index) => {
+                    const slNo = row[norm(SL_NO_COL)];
+                    table += `<tr>${detailColumns.map(h => {
+                        let content = row[norm(h)] || '';
+                        if (h === NPM_ACTION_COL) {
+                            return `<td class="p-2 align-top" id="npm-action-${slNo}"><div class="min-w-[36rem] max-w-lg max-h-24 overflow-y-auto whitespace-normal text-xs">${content}</div></td>`;
+                        }
+                        if (h === 'Update Status') {
+                            return `<td class="p-2 align-top">
+                                <div class="flex flex-col">
+                                    <input type="text" id="update-input-${slNo}" class="w-full text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 mb-2 p-1" placeholder="Add new comment...">
+                                    <button data-slno="${slNo}" class="save-status-btn bg-theme-primary text-white text-xs font-bold py-1 px-2 rounded hover:bg-theme-secondary transition-colors">Save</button>
+                                </div>
+                            </td>`;
+                        }
+                        return `<td class="p-2 whitespace-nowrap align-top">${content}</td>`;
+                    }).join('')}</tr>`;
+                });
+                
+                table += `</tbody></table>`;
+                modalBody.innerHTML = table;
+                
+                modalBody.querySelectorAll('.save-status-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const slNo = button.dataset.slno;
+                        const input = document.getElementById(`update-input-${slNo}`);
+                        const newComment = input.value.trim();
+                        
+                        if (newComment) {
+                            const date = new Date();
+                            const formattedDate = `[${date.getDate()} ${date.toLocaleString('default', { month: 'short' })}, ${date.getFullYear().toString().substr(-2)}]`;
+                            
+                            const projectRow = fullDataset.find(r => r[norm(SL_NO_COL)] === slNo);
+                            if (projectRow) {
+                                const newUpdate = `${formattedDate} ${newComment}`;
+                                projectRow[norm(NPM_ACTION_COL)] = newUpdate + (projectRow[norm(NPM_ACTION_COL)] ? '; ' + projectRow[norm(NPM_ACTION_COL)] : '');
+                                
+                                const npmCell = document.getElementById(`npm-action-${slNo}`);
+                                if(npmCell) {
+                                    npmCell.querySelector('div').textContent = projectRow[norm(NPM_ACTION_COL)];
+                                }
+                                input.value = '';
+                                showNotification('Status updated!', false);
+                            }
+                        } else {
+                            showNotification('Comment cannot be empty.', true);
+                        }
+                    });
+                });
+
+                detailModal.classList.remove('hidden');
+            };
+
+            const createMultiSelect = (id, label, options) => {
+                const container = document.createElement('div');
+                
+                const buttonId = `${id}Button`;
+                const optionsId = `${id}Options`;
+                
+                container.innerHTML = `
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">${label}</label>
+                    <button id="${buttonId}" class="w-full text-left p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 flex justify-between items-center">
+                        <span>All ${label}s</span>
+                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div id="${optionsId}" class="hidden absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700 max-h-60 overflow-y-auto">
+                        <div class="p-2 space-y-1">
+                            <div><label class="flex items-center"><input type="checkbox" data-type="all" checked class="form-checkbox h-4 w-4 text-theme-primary rounded mr-2"> All</label></div>
+                            ${options.map(o => `<div><label class="flex items-center"><input type="checkbox" data-type="option" value="${o}" class="form-checkbox h-4 w-4 text-theme-primary rounded mr-2"> ${o}</label></div>`).join('')}
+                        </div>
+                    </div>`;
+
+                const button = container.querySelector(`#${buttonId}`);
+                const optionsContainer = container.querySelector(`#${optionsId}`);
+                const allCheckbox = optionsContainer.querySelector('[data-type="all"]');
+                const optionCheckboxes = optionsContainer.querySelectorAll('[data-type="option"]');
+                
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    optionsContainer.classList.toggle('hidden');
+                });
+
+                const updateButtonText = () => {
+                    const checkedOptions = Array.from(optionCheckboxes).filter(cb => cb.checked);
+                    if (allCheckbox.checked || checkedOptions.length === 0) {
+                        button.querySelector('span').textContent = `All ${label}s`;
+                    } else if (checkedOptions.length === 1) {
+                        button.querySelector('span').textContent = checkedOptions[0].value;
+                    } else {
+                        button.querySelector('span').textContent = `${checkedOptions.length} ${label}s selected`;
+                    }
+                };
+
+                allCheckbox.addEventListener('change', () => {
+                    optionCheckboxes.forEach(cb => cb.checked = false);
+                    updateButtonText();
+                    updatePivotTable();
+                });
+
+                optionCheckboxes.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        if (cb.checked) {
+                            allCheckbox.checked = false;
+                        } else if (Array.from(optionCheckboxes).every(c => !c.checked)) {
+                            allCheckbox.checked = true;
+                        }
+                        updateButtonText();
+                        updatePivotTable();
+                    });
+                });
+                return container;
+            };
+
+            // Main execution for renderStage4BuPerformance
+            const filterContainer = document.getElementById('stage4Filters');
+            filterContainer.innerHTML = ''; // Clear previous filters
+            
+            const uniqueSBUs = [...new Set(fullDataset.map(row => row[norm(SBU_COL)]).filter(Boolean))].sort();
+            const uniqueBuildLevels = [...new Set(fullDataset.map(row => row[norm(BUILD_LEVEL_COL)]).filter(Boolean))].sort();
+            const uniqueEngineers = [...new Set(fullDataset.map(row => row[norm(NPI_ENG_COL)]).filter(Boolean))].sort();
+            const allPossibleStatuses = [...new Set(fullDataset.map(row => row[norm(PENDING_REASON_COL)]).filter(Boolean))].sort();
+
+            filterContainer.appendChild(createMultiSelect('sbuFilter', 'SBU', uniqueSBUs));
+            filterContainer.appendChild(createMultiSelect('buildLevelFilter', 'Build Level', uniqueBuildLevels));
+            filterContainer.appendChild(createMultiSelect('engineerFilter', 'NPI Engineer', uniqueEngineers));
+            filterContainer.appendChild(createMultiSelect('statusFilter', 'Status', allPossibleStatuses));
+            
+            updatePivotTable();
+        };
+        
+        // --- Column Order Modal Logic ---
+        const openColumnOrderModal = () => {
+            if (fullDataset.length === 0) {
+                showNotification('Please load a CSV file first to customize column order.', true);
+                settingsModal.classList.add('hidden'); // Also hide the settings modal
+                return;
+            }
+            const norm = (str) => str ? str.replace(/\s+/g, ' ').trim() : '';
+            const savedOrders = JSON.parse(localStorage.getItem('npiColumnOrders')) || {};
+
+            const populateList = (container, key, allItems) => {
+                container.innerHTML = '';
+                const savedOrder = savedOrders[key] || [];
+                const ordered = savedOrder.filter(item => allItems.includes(item));
+                const unordered = allItems.filter(item => !savedOrder.includes(item)).sort();
+                
+                [...ordered, ...unordered].forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'sortable-item';
+                    div.textContent = item;
+                    container.appendChild(div);
+                });
+            };
+
+            const allBuildLevels = [...new Set(fullDataset.map(row => row[norm(BUILD_LEVEL_COL)]).filter(Boolean))];
+            const allStatuses = [...new Set(fullDataset.map(row => row[norm(PENDING_REASON_COL)]).filter(Boolean))];
+
+            populateList(buildLevelSortable, 'buildLevels', allBuildLevels);
+            populateList(statusSortable, 'statuses', allStatuses);
+
+            Sortable.create(buildLevelSortable, { animation: 150, ghostClass: 'sortable-ghost' });
+            Sortable.create(statusSortable, { animation: 150, ghostClass: 'sortable-ghost' });
+            
+            columnOrderModal.classList.remove('hidden');
+        };
+
+        const saveColumnOrders = () => {
+            const getOrderFromList = (container) => {
+                return Array.from(container.children).map(el => el.textContent);
+            };
+            const newOrders = {
+                buildLevels: getOrderFromList(buildLevelSortable),
+                statuses: getOrderFromList(statusSortable)
+            };
+            localStorage.setItem('npiColumnOrders', JSON.stringify(newOrders));
+            columnOrderModal.classList.add('hidden');
+            showNotification('Column order saved!', false);
+            // Re-render the pivot table with the new order
+            const stage4Tab = document.getElementById('tab-stage4');
+            if(stage4Tab.classList.contains('active')) {
+                renderStage4BuPerformance();
+            }
+        };
+
+        const resetColumnOrders = () => {
+            localStorage.removeItem('npiColumnOrders');
+            columnOrderModal.classList.add('hidden');
+            showNotification('Column order reset to default.', false);
+            // Re-render the pivot table with the default order
+            const stage4Tab = document.getElementById('tab-stage4');
+            if(stage4Tab.classList.contains('active')) {
+                renderStage4BuPerformance();
+            }
+        };
+
+        closeColumnOrderModal.addEventListener('click', () => columnOrderModal.classList.add('hidden'));
+        saveColumnOrder.addEventListener('click', saveColumnOrders);
+        resetColumnOrder.addEventListener('click', resetColumnOrders);
+
+
+        exportCsvButton.addEventListener('click', () => {
+            // Re-add any columns that were removed for display purposes but should be in the export
+            const dataToExport = fullDataset.map(row => {
+                const newRow = {};
+                originalHeaders.forEach(header => {
+                    newRow[header] = row[header] !== undefined ? row[header] : '';
+                });
+                return newRow;
+            });
+
+            const csv = Papa.unparse(dataToExport);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "tracker_updated.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        const switchToStage = (stageId, skipRender = false) => {
+            Object.keys(stageContents).forEach(key => {
+                stageContents[key].classList.add('hidden');
+                stageTabs[key].classList.remove('active');
+            });
+            stageContents[stageId].classList.remove('hidden');
+            stageTabs[stageId].classList.add('active');
+
+            if (stageId === 'stage4' && fullDataset.length > 0 && !skipRender) {
+                renderStage4BuPerformance();
+            }
+        };
+
+        stageTabs.stage1.addEventListener('click', () => switchToStage('stage1'));
+        stageTabs.stage2.addEventListener('click', () => switchToStage('stage2'));
+        stageTabs.stage3.addEventListener('click', () => switchToStage('stage3'));
+        stageTabs.stage4.addEventListener('click', () => switchToStage('stage4'));
+
+        // Attach event listeners for pivot table controls once
+        const pivotToggle = document.getElementById('pivotToggleSwitch');
+        if (pivotToggle) {
+            pivotToggle.addEventListener('change', () => {
+                if(stageTabs.stage4.classList.contains('active')) {
+                     renderStage4BuPerformance();
+                }
+            });
+        }
+        
+        if (openColumnOrderModalBtn) {
+            openColumnOrderModalBtn.addEventListener('click', openColumnOrderModal);
+        }
+
+        // Close multi-select dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('[id$="Options"]').forEach(el => {
+                // Check if the click is outside the dropdown and its button
+                const button = document.getElementById(el.id.replace('Options', 'Button'));
+                if (!el.contains(e.target) && button && !button.contains(e.target)) {
+                    el.classList.add('hidden');
+                }
+            });
+        });
+        
+        // --- Header Scroll Effect ---
+        const header = document.querySelector('.app-header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) { // When scrolled more than 10 pixels
+                header.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm', 'border-b', 'border-gray-200', 'dark:border-gray-700');
+            } else { // When at the very top
+                header.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm', 'border-b', 'border-gray-200', 'dark:border-gray-700');
+            }
+        });
+    });
+    </script>
+</body>
+</html>
+
